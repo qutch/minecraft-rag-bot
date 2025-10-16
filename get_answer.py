@@ -64,7 +64,7 @@ def get_similar_vectors(query_vector: list[float], top_k: int) -> list[list[floa
     k most similar vectors from the database 
     """
     vectors = index.query(
-        namespace='__default__',
+        namespace='recipe-data',
         vector=query_vector,
         top_k=top_k,
         include_metadata=True,
@@ -80,6 +80,7 @@ def get_top_text(vectors: list[list[float]], k: int) -> str:
     top_texts = []
     for i in range(k):
         top_texts.append(vectors[i].metadata.get('text'))
+        top_texts.append(vectors[i].metadata.get('recipe'))
     return "\n---\n".join(top_texts)
 
 def generate_response(context: str, query: str) -> str:

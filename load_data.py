@@ -22,6 +22,21 @@ encoding = tiktoken.encoding_for_model(MODEL)
 def count_tokens(text: str) -> int:
     return len(encoding.encode(text))
 
+def load_recipes(folderpath='./data/recipes'):
+    recipes = {}
+    for file in os.listdir(folderpath):
+        if file.endswith('json'):
+            path = os.path.join(folderpath, file)
+            with open(path, 'r', encoding='utf-8') as file:
+                item = json.load(file)
+                try:
+                    item_name = item.get('result').get('id')[10:]
+                except Exception:
+                    print("couldnt get item name, skipping")
+                    continue
+                recipes[item_name.lower()] = item
+    return recipes
+
 def chunk_text(text, max_chars: int = 1000, overlap: int = 200):
 
     sentences = re.split(r'(?<=[.!?]) +', text)
@@ -60,11 +75,14 @@ def token_chunk_text(text, max_tokens=1000, overlap=200):
     return chunks
 
 
-def chunk_documents(documents):
+def chunk_documents(documents, recipes):
 
     chunked_documents = []
 
     for doc in documents:
+
+        title = doc.get("title", "").lower().replace(" ", "_")
+        recipe_data = recipes.get(title, '')
 
         # Chunk the document's text
         text = doc.get("content", "")
@@ -82,6 +100,7 @@ def chunk_documents(documents):
                 "title": doc.get("title", ""),
                 "category": doc.get("category", "miscellaneous"),
                 "document_url": doc.get("url", ""),
+                "recipe": recipe_data,
             })
 
     return chunked_documents
@@ -122,7 +141,7 @@ def create_token_safe_batches(chunks, max_tokens=8191):
 
 
 def embed_and_upsert(chunked_documents):
-    
+
     batches = create_token_safe_batches(chunked_documents)
     total_batches = len(batches)
 
@@ -151,7 +170,8 @@ def embed_and_upsert(chunked_documents):
                     'title': chunk.get('title', ''),
                     'text': chunk.get('text', ''),
                     'category': chunk.get('category', ''),
-                    'document_url': chunk.get('document_url', '')
+                    'document_url': chunk.get('document_url', ''),
+                    'recipe': json.dumps(chunk.get('recipe', '')),
                 }
             } for chunk, embedding in zip(batch, embeddings) 
         ]
@@ -161,7 +181,7 @@ def embed_and_upsert(chunked_documents):
         try:
             index.upsert(
                 vectors=to_upsert,
-                namespace='__default__',
+                namespace='recipe-data',
             )
         except Exception as e:
             print(f"Error uploading batch {batch_num}: {e}")
@@ -190,10 +210,11 @@ def upsert_chunks(chunked_documents, batch_size=96):
 
 print("loading data...")
 docs = load_json('./data/documents.json')
+recipes = load_recipes()
 print("finished loading data")
 print()
 print("chunking docs...")
-chunks = chunk_documents(docs)
+chunks = chunk_documents(docs, recipes)
 print("finished chunking docs")
 print()
 print(len(chunks))
