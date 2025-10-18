@@ -8,11 +8,6 @@ from pydantic import BaseModel
 # Set up FastAPI
 app = FastAPI()
 
-@app.get('/')
-async def root():
-    return {'message': 'example message'}
-
-
 
 load_dotenv()
 
@@ -119,7 +114,8 @@ def ask_user_question():
     query = input("ask a question about minecraft: ")
     return query
 
-def get_user_answer(query):
+@app.post('/chat')
+def get_user_answer(query: str):
     print("Embedding question...")
     query_vector = embed_query(query)
     print("Finding possible articles...")

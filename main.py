@@ -28,3 +28,7 @@ def update_item(item_id, item: Item):
 def add_numbers(first_number: int, second_number: int):
     the_sum = first_number + second_number
     return {"sum": the_sum}
+
+@app.post('/question/')
+def ask_question():
+    pass
