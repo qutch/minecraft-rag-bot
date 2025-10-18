@@ -3,11 +3,9 @@ from openai import OpenAI
 from pinecone import Pinecone
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from pydantic import BaseModel
 
 # Set up FastAPI
 app = FastAPI()
-
 
 load_dotenv()
 
