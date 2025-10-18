@@ -122,7 +122,3 @@ def get_user_answer(query: str):
     context = get_top_text(results, 10)
     response = generate_response(context, query)
     return response
-
-q = ask_user_question()
-a = get_user_answer(q)
-print(a)
