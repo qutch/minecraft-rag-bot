@@ -2,10 +2,6 @@ import os
 from openai import OpenAI
 from pinecone import Pinecone
 from dotenv import load_dotenv
-from fastapi import FastAPI
-
-# Set up FastAPI
-app = FastAPI()
 
 load_dotenv()
 
@@ -112,8 +108,7 @@ def ask_user_question():
     query = input("ask a question about minecraft: ")
     return query
 
-@app.post('/chat')
-def get_user_answer(query: str):
+async def get_user_answer(query: str):
     print("Embedding question...")
     query_vector = embed_query(query)
     print("Finding possible articles...")
